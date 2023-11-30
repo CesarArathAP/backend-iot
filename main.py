@@ -2,7 +2,6 @@ import fastapi
 import sqlite3
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-import requests  # Agregamos la importación para manejar solicitudes HTTP
 
 # Crea la base de datos
 conn = sqlite3.connect("dispositivos.db")
@@ -10,11 +9,12 @@ conn = sqlite3.connect("dispositivos.db")
 app = fastapi.FastAPI()
 
 class Contacto(BaseModel):
-    dispositivo: str
-    valor: str
+    id : int
+    dispositivo : str
+    valor : str
     
 class Dispositivo(BaseModel):
-    valor: str
+    valor : str
 
 # Origins
 origins = [
@@ -32,6 +32,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get("/dispositivos")
 async def obtener_dispositivos():
     """Obtiene todos los dispositivos."""
@@ -43,12 +44,14 @@ async def obtener_dispositivos():
         response.append(dispositivo)
     return response
 
+
 @app.get("/dispositivos/{id_dispositivo}")
 async def obtener_valor_dispositivo(id_dispositivo: int):
     """Obtiene el valor de un dispositivo por su id_dispositivo."""
     c = conn.cursor()
     c.execute('SELECT valor FROM dispositivos WHERE id_dispositivo = ?', (id_dispositivo,))
     valor = c.fetchone()  # Obtiene la primera fila de la consulta
+    
     return {"valor": valor[0] if valor else None}  # Devuelve el valor o None si no se encontró el dispositivo
 
 @app.put("/dispositivos/{id_dispositivo}/{nuevo_valor}")
@@ -57,15 +60,4 @@ async def actualizar_valor_dispositivo(id_dispositivo: int, nuevo_valor: str):
     c = conn.cursor()
     c.execute('UPDATE dispositivos SET valor = ? WHERE id_dispositivo = ?', (nuevo_valor, id_dispositivo))
     conn.commit()
-    
-    # Después de actualizar en la base de datos local, también actualiza en Firebase
-    actualizar_firebase(id_dispositivo, nuevo_valor)
-    
     return {"mensaje": "Valor actualizado"}
-
-def actualizar_firebase(id_dispositivo: int, nuevo_valor: str):
-    # Define la URL de la base de datos Firebase
-    url_firebase = f"https://iot-esp32-a458a-default-rtdb.firebaseio.com/iot/{id_dispositivo}/valor.json"
-
-    # Realiza la solicitud PUT para actualizar el valor en Firebase
-    requests.put(url_firebase, json=nuevo_valor)
