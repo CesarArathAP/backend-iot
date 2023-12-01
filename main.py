@@ -20,7 +20,7 @@ class Dispositivo(BaseModel):
 origins = [
     "http://localhost:8080",
     "http://127.0.0.1:5000",
-    ##"https://herokufrontend23-2e5ad8e49cc5.herokuapp.com"
+    ##"https://backend-iot-9945b3a20353.herokuapp.com/dispositivos"
 ]
 
 # Cors
